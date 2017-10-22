@@ -327,4 +327,137 @@ WHERE
     kraj IN ('ger' , 'aut')
 ORDER BY kraj ASC, nazwisko ASC;
 
-select * from trenerzy where data_ur_t is null;
+SELECT 
+    *
+FROM
+    trenerzy
+WHERE
+    data_ur_t IS NULL;
+    
+  # zawodnicy urodzeni między marcem a listopadem  
+SELECT 
+    *
+FROM
+    zawodnicy
+WHERE
+    MONTH(data_ur) BETWEEN 3 AND 11
+ORDER BY nazwisko;    
+
+SELECT 
+    *
+FROM
+    trenerzy
+ORDER BY data_ur_t IS NULL DESC , data_ur_t DESC;
+    
+SELECT 
+    kraj,
+    imie,
+    nazwisko,
+    ROUND(waga / POW(wzrost / 100, 2), 1) AS BMI,
+    CASE
+        WHEN (waga / POW(wzrost / 100, 2)) > 20 THEN 'za duże'
+        WHEN
+            (waga / POW(wzrost / 100, 2)) > 18
+                AND (waga / POW(wzrost / 100, 2)) <= 20
+        THEN
+            'ok'
+        WHEN (waga / POW(wzrost / 100, 2)) <= 18 THEN 'za mało'
+    END AS test
+FROM
+    zawodnicy
+ORDER BY  BMI ASC, 2 asc;
+
+# lista w kolejności losowej
+SELECT 
+    kraj,
+    imie,
+    nazwisko
+FROM
+    zawodnicy
+ORDER BY  rand();
+
+#łączenie dwóch tabel zawodników i trenerów
+SELECT 
+    imie, nazwisko, kraj
+FROM
+    zawodnicy 
+UNION SELECT 
+    imie_t, nazwisko_t, kraj
+FROM
+    trenerzy;
+    
+# łączenie dwóch tabel gdzie jedna jest niepełna (ważna kolejność kolumn w obydwu tabelach
+# by nie łączyły się tabele o różnych wartościach
+# a następnie sortowanie po kraju
+SELECT 
+    imie, nazwisko, kraj, data_ur, waga, wzrost, 'zawodnik' as rola
+FROM
+    zawodnicy 
+UNION 
+SELECT 
+    imie_t, nazwisko_t, kraj, data_ur_t, null, null, 'trener' as rola
+FROM
+    trenerzy
+ORDER BY  kraj, rola, nazwisko;
+
+#--------łączenie tabel - joiny-------------------------------------------------
+
+select z.*, t.* from zawodnicy as z natural left join trenerzy as t
+union
+select z.*, t.* from zawodnicy as z natural right join trenerzy as t
+order by 4;
+
+
+
+SELECT 
+    z.imie, z.nazwisko, z.kraj, t.imie_t, t.nazwisko_t
+FROM
+    zawodnicy AS z
+        LEFT JOIN
+    trenerzy AS t ON z.kraj = t.kraj 
+UNION SELECT 
+    z.imie, z.nazwisko, z.kraj, t.imie_t, t.nazwisko_t
+FROM
+    zawodnicy AS z
+        RIGHT JOIN
+    trenerzy AS t ON z.kraj = t.kraj
+ORDER BY 3;
+
+# złączenie trzech tabel
+SELECT 
+    z.imie,
+    z.nazwisko,
+    t.imie_t,
+    t.nazwisko_t,
+    k.imie_k,
+    k.nazwisko_k
+FROM
+    zawodnicy AS z
+        LEFT JOIN
+    trenerzy AS t ON (z.kraj = t.kraj)
+        LEFT JOIN
+    kibice AS k ON (z.kraj = k.kraj);
+   
+#-----------------zadanie-----------------------------------------------
+    select * from skocznie;
+    select * from zawody;
+
+SELECT 
+    z.data, s.miasto, s.kraj_s, s.nazwa, s.k
+FROM
+    zawody AS z
+        LEFT JOIN
+    skocznie AS s ON z.id_skoczni = s.id_skoczni
+ORDER BY z.data;
+
+# zadanie
+SELECT 
+    z.*, t.*
+FROM
+    zawodnicy AS z
+        NATURAL right JOIN
+    trenerzy AS t
+WHERE
+    z.kraj IS NULL;
+    
+
