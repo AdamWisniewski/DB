@@ -459,5 +459,154 @@ FROM
     trenerzy AS t
 WHERE
     z.kraj IS NULL;
-    
+ 
+ #-----------zadanie-------------
+ /* wyświetla zawodników z krajów w których były zawody */
+SELECT 
+    zaw.imie,
+    zaw.nazwisko,
+    z.data,
+    s.miasto,
+    s.kraj_s,
+    s.nazwa
+FROM
+    zawody as z 
+        LEFT JOIN
+    skocznie as s on s.id_skoczni = z.id_skoczni
+        right JOIN
+    zawodnicy as zaw on zaw.kraj = s.kraj_s;
+ 
+ #------------zadanie------------ wyświetla zawodników którzy są starsi od swoich ternerów
+ SELECT 
+    zawodnicy.*, trenerzy.*
+FROM
+    zawodnicy
+         LEFT JOIN
+    trenerzy ON zawodnicy.kraj = trenerzy.kraj
+WHERE
+    zawodnicy.data_ur > trenerzy.data_ur_t; 
 
+ #------------zadanie------------ 
+ /*wyświetla parę zawodników jednego kraju gdzie drugi jest wyższy niż pierwszy */
+ SELECT 
+    z1.*, z2.*
+FROM
+    zawodnicy as z1
+		JOIN
+    zawodnicy as z2 ON z1.kraj = z2.kraj
+WHERE
+    z1.wzrost > z2.wzrost;
+    
+#----------zadanie----- maksymalny wzrost w każdej z reprezentacji
+
+SELECT 
+    kraj, MAX(wzrost)
+FROM
+    zawodnicy
+GROUP BY kraj
+ORDER BY kraj;
+
+#----------zadanie----- średnia waga w każdej z reprezentacji
+
+SELECT 
+    kraj, ROUND(AVG(waga), 2)
+FROM
+    zawodnicy
+GROUP BY kraj
+ORDER BY kraj;
+
+#----------zadanie----- liczba reprezentantów danego kraju
+
+SELECT 
+    kraj, COUNT(kraj) AS liczba
+FROM
+    zawodnicy
+GROUP BY kraj
+ORDER BY liczba DESC;
+
+#----------zadanie----- liczba reprezentantów danego kraju których jest więcej niż dwóch
+
+SELECT 
+    kraj, COUNT(kraj) AS liczba
+FROM
+    zawodnicy
+GROUP BY kraj
+HAVING liczba > 2
+ORDER BY liczba DESC;
+
+#----------zadanie----- liczba wszystkich zawodników
+SELECT 
+	COUNT(nazwisko) AS liczba
+FROM
+    zawodnicy;
+    
+#----------zadanie-----  liczba zawodników wyższych od Adama Małysza
+SELECT 
+	COUNT(*) AS liczba
+FROM
+    zawodnicy
+    where wzrost > (select wzrost from zawodnicy where nazwisko = 'Małysz');
+    
+#----------zadanie-----  liczba zawodników wyższych niż 180 w wszystkich dróżynach
+SELECT 
+    kraj, COUNT(*) AS liczba
+FROM
+    zawodnicy
+WHERE
+    wzrost >= 180
+GROUP BY kraj
+ORDER BY liczba DESC, kraj;
+
+#----------zadanie-----  liczba zawodników urodzonych w poszczególnych kwartałach w poszcz. latach
+SELECT 
+    YEAR(data_ur) AS rok,
+    ELT(QUARTER(data_ur), 'I', 'II', 'III', 'IV') AS kwartal,
+    COUNT(*) AS liczba
+FROM
+    zawodnicy
+GROUP BY rok , kwartal
+ORDER BY rok ASC , kwartal ASC;
+
+#----------zadanie----- średnia liczba reprezentantów danego kraju 
+
+SELECT count(*) / count(distinct kraj) as avg from zawodnicy; 
+
+#------ kraje których liczebność jest większa niż średnia-----------
+
+SELECT 
+    kraj, COUNT(*) AS num
+FROM
+    zawodnicy
+GROUP BY kraj
+HAVING
+    num > (SELECT 
+            COUNT(*) / COUNT(DISTINCT kraj) AS avg
+        FROM
+            zawodnicy);
+            
+#------ lista ekip z liczbą zawodników powyżej 180 wzrostu ale bez ekip gdzie jest mniej niż 2 zawodników-----------
+
+SELECT 
+    kraj, COUNT(*) AS num
+FROM
+    zawodnicy
+WHERE
+    wzrost > 180
+GROUP BY kraj
+HAVING num >= 2;
+
+#-------ms76 - tylko te ekipy gdzie średnia wzrostu jest powyżej 180 wzrostu
+SELECT 
+    kraj, AVG(wzrost) AS avg
+FROM
+    zawodnicy
+GROUP BY kraj
+HAVING avg > 180;
+
+#-----
+/*
+select year(now()) - year(data_ur) as wiek_z, kraj from zawodnicy
+union
+select  year(now()) - year(data_ur_t) as wiek_t, kraj from trenerzy
+;
+*/
