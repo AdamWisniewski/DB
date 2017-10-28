@@ -677,12 +677,311 @@ FROM
     zawodnicy
 WHERE
     data_ur > (SELECT 
-            data_ur
+            data_ur_t
         FROM
             trenerzy
         WHERE
             nazwisko = 'Kuttin');
             
+# zawodnicy o wzroscie takim samym jak janne ahonen
 
+SELECT 
+    *
+FROM
+    zawodnicy
+WHERE
+    wzrost = (SELECT 
+            wzrost
+        FROM
+            zawodnicy
+        WHERE
+            nazwisko = 'Ahonen')
+        AND nazwisko != 'Ahonen';
+        
+# imie nazwisko najwyzszego zawodnika
+
+SELECT 
+    imie, nazwisko, wzrost
+FROM
+    zawodnicy
+WHERE
+    wzrost = (SELECT 
+            MAX(wzrost)
+        FROM
+            zawodnicy);
+
+# zawodnicy ciezsi niz średnia wsrod wszystkich
+
+SELECT 
+    imie, nazwisko, waga
+FROM
+    zawodnicy
+WHERE
+    waga > (SELECT 
+            AVG(waga)
+        FROM
+            zawodnicy);
  
+# zawodnicy ciezsi niz przecietny zawodnik z polski
 
+SELECT 
+    imie, nazwisko, waga
+FROM
+    zawodnicy
+WHERE
+    waga > (SELECT 
+            AVG(waga)
+        FROM
+            zawodnicy
+		WHERE kraj = 'POL');
+
+# wypisz zawodnikow ciezszych niz srednia w danej ekipie
+ 
+ SELECT 
+    *
+FROM
+    zawodnicy AS a
+WHERE
+    waga > (SELECT 
+            AVG(waga)
+        FROM
+            zawodnicy AS b
+        WHERE
+            a.kraj = b.kraj);
+            
+# cwiczenie 86
+
+SELECT 
+    kraj, sum(wzrost > 180) AS sum
+FROM
+    zawodnicy
+GROUP BY kraj;
+
+#zawodnicy ktorych wzrost jest wyzszy niz 180 
+# i rok urodzenia jest pomiedzy 1980 i 1990, z zapytaniem zagniezdzonym
+
+SELECT 
+    *
+FROM
+    (SELECT 
+        *
+    FROM
+        zawodnicy
+    WHERE
+        YEAR(data_ur) BETWEEN 1980 AND 1990) AS a1
+WHERE
+    wzrost > 180;
+
+
+SELECT 
+    AVG(x) AS srednia
+FROM
+    (SELECT 
+        MAX(wzrost) AS x
+    FROM
+        zawodnicy
+    GROUP BY kraj) AS table;
+ 
+ # wypisz srednia stonowiaca sume wzrostu i wagi wszystkich zawodnikow
+ 
+ SELECT 
+    AVG(suma) AS srednia
+FROM
+    (SELECT 
+        waga + wzrost AS suma
+    FROM
+        zawodnicy) AS tabela;
+        
+# srednia waga z najlzejszych zawodikow kazdego kraju
+
+ SELECT 
+    AVG(x) AS srednia
+FROM
+    (SELECT 
+        min(waga) AS x
+    FROM
+        zawodnicy
+    GROUP BY kraj) AS tabela;
+        
+# podzapytania skorelowane -----------------------
+
+# wypisz zawodnikow ktorzy maja to samo imie co trenerzy
+
+SELECT 
+    *
+FROM
+    zawodnicy
+WHERE
+    EXISTS( SELECT 
+            *
+        FROM
+            trenerzy
+        WHERE
+            zawodnicy.imie = trenerzy.imie_t);
+
+# zawodnicy ktorych kraj pochodzenia nie istnieje w tabeli skocznie
+
+SELECT 
+    *
+FROM
+    zawodnicy
+WHERE
+    NOT EXISTS( SELECT 
+            *
+        FROM
+            skocznie
+        WHERE
+            kraj_s = kraj);
+
+#wypisz duplikaty zawodników których data urodzenia jest taka sama
+
+select count(data_ur) as liczba from zawodnicy group by data_ur;
+
+select * from zawodnicy as z1 where exists (select * from zawodnicy as z2 where z1.data_ur = z2.data_ur and z1.id_skoczka != z2.id_skoczka);
+
+#wypisz duplikaty zawodnikow ktorych waga jest taka sama
+
+SELECT 
+    *
+FROM
+    zawodnicy AS z1
+WHERE
+    EXISTS( SELECT 
+            *
+        FROM
+            zawodnicy AS z2
+        WHERE
+            z1.waga = z2.waga
+                AND z1.id_skoczka != z2.id_skoczka);	
+
+# zawodnicy wraz z dodatkowa informacja o ilosci zawodnikow
+
+select imie, nazwisko, (select count(*) from zawodnicy) as suma from zawodnicy;
+
+#------------------widoki-----------------------------------------------------------------------------
+drop database firma;
+create database firma;
+use firma;
+create table uzytkownicy (
+ID  integer PRIMARY KEY auto_increment,
+imie varchar(45),
+nazwisko varchar(45));
+
+create table systemy (
+ID  integer PRIMARY KEY auto_increment,
+nazwa varchar(45),
+liczbaprogramow int);
+
+create table uprawnienia (
+ID integer PRIMARY KEY auto_increment,
+ID_uzytkownicy int,
+ID_systemy int);
+
+create table programy (
+ID integer PRIMARY KEY auto_increment,
+ID_systemy int,
+nazwa varchar(45));
+
+show tables;
+
+insert into uzytkownicy values (1, 'Tomasz', 'Tomaszewski');
+insert into uzytkownicy values (default, 'Anna', 'Kowalska');
+insert into uzytkownicy values (default, 'Michał', 'Jabłoński');
+insert into uzytkownicy values (default, 'Kamila', 'Nowak');
+
+insert into systemy values (default, 'Windows', 2);
+insert into systemy values (default, 'Linux', 0);
+insert into systemy values (default, 'MacOS', 0);
+
+insert into uprawnienia values (default, 1, 1);
+insert into uprawnienia values (default, 1, 3);
+insert into uprawnienia values (default, 2, 2);
+insert into uprawnienia values (default, 3, 1);
+insert into uprawnienia values (default, 3, 2);
+insert into uprawnienia values (default, 3, 3);
+
+insert into programy values (default, 1, 'Word');
+insert into programy values (default, 1, 'Exel');
+
+
+create view V_uzytkownicy as select * from uzytkownicy;
+
+select * from V_uzytkownicy;
+
+#ms 08
+CREATE VIEW v2 AS
+    SELECT 
+        imie, nazwisko
+    FROM
+        uzytkownicy
+            NATURAL LEFT JOIN
+        uprawnienia;
+
+SELECT 
+    imie, nazwisko, COUNT(nazwisko)
+FROM
+    uzytkownicy AS u
+        LEFT JOIN
+    uprawnienia AS up ON u.ID = up.ID_uzytkownicy
+GROUP BY nazwisko;
+
+alter view v2 as select u.imie, u.nazwisko, count(nazwisko) from uzytkownicy as u inner join uprawnienia as up on u.ID=up.ID_uzytkownicy group by up.ID_uzytkownicy;
+
+select * from v2;
+
+# widok z uzytkownikami ktirzy posiadaja wiecej niz 2 uprawnienia
+CREATE VIEW v3 AS
+    SELECT 
+        *
+    FROM
+        uzytkownicy u
+    WHERE
+        (SELECT 
+                COUNT(*)
+            FROM
+                uprawnienia up
+            WHERE
+                up.ID_uzytkownicy = u.ID) >= 2;
+
+select * from v3;
+
+# widok ktory wypisze systemy zawerajace litre o wraz z przypisanymi do niego programamai. 
+# jezeli system nie bedzie posiadal przypisanego porgamu to rowniez ma zostac wypisany
+
+SELECT 
+    s.nazwa, p.nazwa
+FROM
+    systemy AS s
+        LEFT JOIN
+    programy p ON s.ID = p.ID_systemy
+WHERE
+    s.nazwa LIKE '%o%';
+ 
+# wyzwalacze / triggery ------------------------------------ 
+ drop trigger if exists AfterInsert;
+ create trigger BeforeInsert after insert on uzytkownicy for each row insert into uprawnienia (ID_uzytkownicy, ID_systemy) values (new.ID, 1);
+ 
+ insert into uzytkownicy value (default, 'Adam', 'Wiśniewski');
+ 
+ select * from uzytkownicy;
+ 
+# wyzwalacz który przed dodaniem nazwy zmieni ja na wielie litery
+
+drop trigger if exists duze_litery;
+create trigger duze_litery before insert on systemy for each row set new.nazwa = upper(new.nazwa);
+
+insert into systemy value (default, 'dos', 0);
+
+select * from systemy;
+drop trigger if exists dodawanie;
+insert into systemy value (default, 'dos', 2);
+
+
+#delimiter $$
+create trigger dodawanie before insert on systemy for each row if (exists(select * from systemy where nazwa=new.nazwa) = true) then set new.nazwa = concat(new.nazwa, '_copy'); end if;
+
+select * from systemy;
+
+# trigger ktory po usunieciu uzytkownika usunie tez jego uprawnienia
+
+create trigger usuwanie after delete on uzytkownicy for each row delete from uprawnienia where ID_uzytkownicy=old.ID;
