@@ -610,3 +610,79 @@ union
 select  year(now()) - year(data_ur_t) as wiek_t, kraj from trenerzy
 ;
 */
+
+# DZIEŃ 3 SQL -----------------------------------------------
+
+# znajdz zadodników wyższych od Małysza
+
+SELECT 
+    imie, nazwisko, wzrost
+FROM
+    zawodnicy
+WHERE
+    wzrost > (SELECT 
+            wzrost
+        FROM
+            zawodnicy
+        WHERE
+            nazwisko = 'Małysz');
+#-------
+SELECT 
+    imie, nazwisko, waga
+FROM
+    zawodnicy
+WHERE
+    waga > (SELECT 
+            waga
+        FROM
+            zawodnicy
+        WHERE
+            nazwisko = 'Małysz');
+
+# zawodnicy wyżsi niż najcięższy
+
+SELECT 
+    imie, nazwisko, waga, wzrost
+FROM
+    zawodnicy
+WHERE
+    wzrost > (SELECT 
+            wzrost
+        FROM
+            zawodnicy
+        ORDER BY waga desc
+        LIMIT 1);
+
+# zawodnicy niżsi niż najcięższy
+
+SELECT 
+    imie, nazwisko, waga, wzrost
+FROM
+    zawodnicy
+WHERE
+    wzrost < (SELECT 
+            wzrost
+        FROM
+            zawodnicy
+        ORDER BY waga desc
+        LIMIT 1);
+ 
+ # podzapytania zawsze muszą być w nawiasach
+ 
+ # znajdz zawodnikow starszych niz heinz kuttin
+ 
+ SELECT 
+    imie, nazwisko
+FROM
+    zawodnicy
+WHERE
+    data_ur > (SELECT 
+            data_ur
+        FROM
+            trenerzy
+        WHERE
+            nazwisko = 'Kuttin');
+            
+
+ 
+
