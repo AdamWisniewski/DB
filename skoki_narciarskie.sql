@@ -812,12 +812,15 @@ SELECT
 FROM
     zawodnicy
 WHERE
-    EXISTS( SELECT 
+    EXISTS (SELECT 
             *
         FROM
             trenerzy
         WHERE
             zawodnicy.imie = trenerzy.imie_t);
+ 
+ #prostrze rozwiązanie bez zagnieżdżania selecta
+select z.imie, z.nazwisko from zawodnicy z, trenerzy t where z.imie = t.imie_t;
 
 # zawodnicy ktorych kraj pochodzenia nie istnieje w tabeli skocznie
 
